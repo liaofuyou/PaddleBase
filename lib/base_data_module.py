@@ -83,6 +83,9 @@ class BaseDataModule:
 
         return dataloader
 
+    def num_classes(self):
+        return len(self.train_ds.label_list)
+
     @abc.abstractmethod
     def convert_example(self, example, max_seq_length, is_predict=False):
         """文本 -> Token Id"""
@@ -90,8 +93,4 @@ class BaseDataModule:
 
     @abc.abstractmethod
     def batchify_fn(self, is_predict=False):
-        pass
-
-    @abc.abstractmethod
-    def num_classes(self):
         pass

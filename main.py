@@ -3,13 +3,15 @@ from pointwise_matching.model import PointwiseMatchingModel
 from lib.trainer import Trainer
 from lib.metric_stategy import AccuracyMetricStrategy, MetricStrategy
 from lib.optimizer_stategy import BaseOptimizerStrategy
+from sentiment_analysis.data_module import SentimentAnalysisDataModule
+from sentiment_analysis.model import SentimentAnalysisModel
 
 epochs = 10
 
 # 数据
-data_module = PointwiseMatchingDataModule()
+data_module = SentimentAnalysisDataModule()
 # 模型
-model = PointwiseMatchingModel()
+model = SentimentAnalysisModel(num_classes=data_module.num_classes())
 # 优化器策略
 optimizer_strategy = BaseOptimizerStrategy(model, data_module, epochs)
 # 评价指标
@@ -21,7 +23,7 @@ trainer = Trainer(data_module,
                   metric_strategy,
                   epochs)
 
-trainer.test()
+trainer.train()
 
 # controller = PointwiseMatchingController()
 # controller.test()

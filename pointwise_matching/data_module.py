@@ -48,5 +48,3 @@ class PointwiseMatchingDataModule(BaseDataModule):
 
         return batchify_fn
 
-    def num_classes(self):
-        return 2

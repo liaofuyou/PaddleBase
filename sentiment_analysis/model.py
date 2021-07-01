@@ -24,6 +24,4 @@ class SentimentAnalysisModel(nn.Layer):
         return loss, logits
 
     def validation_step(self, batch):
-        input_ids, token_type_ids, labels = batch
-        logits = self(input_ids, token_type_ids)
-        return logits
+        return self.training_step(batch)

@@ -7,72 +7,20 @@ from paddlenlp.data import Stack, Pad, Tuple, np
 from paddlenlp.datasets import load_dataset
 from paddlenlp.transformers import SkepTokenizer
 
+from lib.base_data_module import BaseDataModule
 
-class DataModule:
+
+class SentimentAnalysisDataModule(BaseDataModule):
 
     def __init__(self, batch_size=32, max_seq_length=128):
 
-        self.batch_size = batch_size
+        super().__init__(SkepTokenizer.from_pretrained("skep_ernie_1.0_large_ch"), batch_size, max_seq_length)
 
-        # 第一步： 加载数据集（训练集、验证集、测试集）
-        self.train_ds, self.dev_ds, self.test_ds = self._load_dataset()
-
-        # 第二步： tokenize
-        self._tokenize(max_seq_length)
-
-        # 第三步： 构造 dataloader
-        self.train_dataloader, self.dev_dataloader, self.test_data_loader = self._get_dataloader()
-
-    # 第一步： 加载数据集（训练集、验证集、测试集）
-    @staticmethod
-    def _load_dataset():
+    # 加载数据集（训练集、验证集、测试集）
+    def load_dataset(self):
         return load_dataset("chnsenticorp", splits=["train", "dev", "test"])
 
-    # 第二步： tokenize
-    def _tokenize(self, max_seq_length):
-        self.tokenizer = SkepTokenizer.from_pretrained("skep_ernie_1.0_large_ch")
-
-        # 转换函数（ 文本->Token 编号 ）
-        trans_fn = partial(self.convert_example, max_seq_length=max_seq_length)
-        trans_fn_for_test = partial(trans_fn, is_test=True)
-
-        # 转换
-        self.train_ds.map(trans_fn)
-        self.dev_ds.map(trans_fn)
-        self.test_ds.map(trans_fn_for_test)
-
-    # 第三步： 构造 dataloader
-    def _get_dataloader(self):
-
-        # batchify
-        train_ds_batchify_fn = self._batchify_fn(False)
-        dev_ds_batchify_fn = self._batchify_fn(False)
-        test_ds_batchify_fn = self._batchify_fn(True)
-
-        # BatchSampler
-        train_batch_sampler = DistributedBatchSampler(self.train_ds, batch_size=self.batch_size, shuffle=True)
-        dev_batch_sampler = BatchSampler(self.dev_ds, batch_size=self.batch_size, shuffle=False)
-        test_batch_sampler = BatchSampler(self.test_ds, batch_size=self.batch_size, shuffle=False)
-
-        # Train DataLoader
-        train_dataloader = DataLoader(dataset=self.train_ds,
-                                      batch_sampler=train_batch_sampler,
-                                      collate_fn=train_ds_batchify_fn,
-                                      return_list=True)
-        # Dev DataLoader
-        dev_dataloader = DataLoader(dataset=self.dev_ds,
-                                    batch_sampler=dev_batch_sampler,
-                                    collate_fn=dev_ds_batchify_fn,
-                                    return_list=True)
-        # Test DataLoader
-        test_dataloader = DataLoader(dataset=self.test_ds,
-                                     batch_sampler=test_batch_sampler,
-                                     collate_fn=test_ds_batchify_fn,
-                                     return_list=True)
-
-        return train_dataloader, dev_dataloader, test_dataloader
-
-    def convert_example(self, example, max_seq_length, is_test=False):
+    def convert_example(self, example, max_seq_length, is_predict=False):
         """文本 -> Token Id"""
 
         encoded_inputs = self.tokenizer(text=example["text"], max_seq_len=max_seq_length)
@@ -82,7 +30,7 @@ class DataModule:
         # segment ids
         token_type_ids = encoded_inputs["token_type_ids"]
 
-        if not is_test:
+        if not is_predict:
             # label：情感极性类别
             label = np.array([example["label"]], dtype="int64")
             return input_ids, token_type_ids, label
@@ -91,9 +39,8 @@ class DataModule:
             qid = np.array([example["qid"]], dtype="int64")
             return input_ids, token_type_ids, qid
 
-    def _batchify_fn(self, is_test=False):
-        ignore_label = -1
-        if is_test:
+    def batchify_fn(self, is_predict=False):
+        if is_predict:
             batchify_fn = lambda samples, fn=Tuple(
                 Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids
                 Pad(axis=0, pad_val=self.tokenizer.pad_token_type_id),  # token_type_ids
@@ -108,6 +55,3 @@ class DataModule:
             ): [data for data in fn(samples)]
 
         return batchify_fn
-
-    def num_classes(self):
-        return len(self.train_ds.label_list)
