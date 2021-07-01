@@ -1,11 +1,11 @@
 import os
 
-import numpy as np
 import paddle
+import paddle.nn.functional as F
 
 from sentiment_analysis.data_module import DataModule
-from strategy.metric_stategy import MetricStrategy, ChunkMetricStrategy, AccuracyMetricStrategy
 from sentiment_analysis.model import SentimentAnalysisModel
+from strategy.metric_stategy import MetricStrategy, AccuracyMetricStrategy
 from strategy.optimizer_stategy import OptimizerStrategy, BaseOptimizerStrategy
 
 
@@ -75,29 +75,27 @@ class SentimentAnalysisController:
         self.model.train()
         self.metric_strategy.get_metric().reset()
 
-    @staticmethod
     @paddle.no_grad()
-    def predict(model, data_loader):
+    def test(self):
         """预测"""
 
-        batch_probs = []
+        label_map = {0: '0', 1: '1'}
+        results = []
+        # 切换model模型为评估模式，关闭dropout等随机因素
+        self.model.eval()
+        for batch in self.data_module.test_data_loader:
+            input_ids, token_type_ids, qids = batch
+            # 喂数据给模型
+            logits = self.model(input_ids, token_type_ids)
+            # 预测分类
+            probs = F.softmax(logits, axis=-1)
+            idx = paddle.argmax(probs, axis=1).numpy()
 
-        # 预测阶段打开 eval 模式，模型中的 dropout 等操作会关掉
-        model.eval()
-
-        with paddle.no_grad():
-            for batch_data in data_loader:
-                input_ids, token_type_ids = batch_data
-                input_ids = paddle.to_tensor(input_ids)
-                token_type_ids = paddle.to_tensor(token_type_ids)
-
-                # 获取每个样本的预测概率: [batch_size, 2] 的矩阵
-                batch_prob = model(input_ids=input_ids, token_type_ids=token_type_ids).numpy()
-
-                batch_probs.append(batch_prob)
-            batch_probs = np.concatenate(batch_probs, axis=0)
-
-            return batch_probs
+            idx = idx.tolist()
+            labels = [label_map[i] for i in idx]
+            qids = qids.numpy().tolist()
+            results.extend(zip(qids, labels))
+            print(zip(qids, labels))
 
     def save_model(self):
 
@@ -105,11 +103,9 @@ class SentimentAnalysisController:
         save_dir = os.path.join("skep_ckpt", "model_%d" % self.global_step)
         os.makedirs(save_dir)
 
-        # 保存参数
-        save_param_path = os.path.join(save_dir, 'model_state.pdparams')
-        paddle.save(self.model.state_dict(), save_param_path)
-
-        # 保存 tokenize
+        # 保存当前模型参数
+        paddle.save(self.model.state_dict(), os.path.join(save_dir, 'model_state.pdparams'))
+        # 保存tokenizer的词表等
         self.data_module.tokenizer.save_pretrained(save_dir)
 
     def backward(self, loss):

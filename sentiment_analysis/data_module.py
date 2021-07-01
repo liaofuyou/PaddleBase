@@ -75,13 +75,11 @@ class DataModule:
     def convert_example(self, example, max_seq_length, is_test=False):
         """文本 -> Token Id"""
 
-        # 将原数据处理成model可读入的格式，enocded_inputs是一个dict，包含input_ids、token_type_ids等字段
-        encoded_inputs = self.tokenizer(
-            text=example["text"], max_seq_len=max_seq_length)
+        encoded_inputs = self.tokenizer(text=example["text"], max_seq_len=max_seq_length)
 
-        # input_ids：对文本切分token后，在词汇表中对应的token id
+        # token id
         input_ids = encoded_inputs["input_ids"]
-        # token_type_ids：当前token属于句子1还是句子2，即上述图中表达的segment ids
+        # segment ids
         token_type_ids = encoded_inputs["token_type_ids"]
 
         if not is_test:

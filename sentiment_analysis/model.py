@@ -1,6 +1,6 @@
 import paddle
 import paddle.nn as nn
-from paddlenlp.transformers import ErnieForTokenClassification, SkepForSequenceClassification
+from paddlenlp.transformers import SkepForSequenceClassification
 
 
 class SentimentAnalysisModel(nn.Layer):
