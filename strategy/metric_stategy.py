@@ -1,6 +1,7 @@
 import abc
 import time
 
+import paddle
 from paddle.metric import Accuracy
 from paddlenlp.metrics import ChunkEvaluator
 
@@ -13,11 +14,11 @@ class MetricStrategy:
         pass
 
     @abc.abstractmethod
-    def compute_train_metric(self, *args):
+    def compute_train_metric(self, loss, logits, epoch, global_step, step, batch):
         pass
 
     @abc.abstractmethod
-    def compute_dev_metric(self, *args):
+    def compute_dev_metric(self, logits, batch):
         pass
 
 
@@ -39,10 +40,12 @@ class ChunkMetricStrategy(MetricStrategy):
         precision, recall, f1_score = self.metric.accumulate()
         return precision, recall, f1_score
 
-    def compute_train_metric(self, logits, labels, lens, epoch, global_step, step, loss):
+    def compute_train_metric(self, loss, logits, epoch, global_step, step, batch):
         """计算训练评价指标"""
+        _, _, lens, labels = batch
 
-        precision, recall, f1_score = self._compute(logits, labels, lens)
+        preds = paddle.argmax(logits, axis=-1)
+        precision, recall, f1_score = self._compute(preds, labels, lens)
 
         # 每间隔 10 step 输出训练指标
         # if global_step % 2 != 0:
@@ -56,10 +59,12 @@ class ChunkMetricStrategy(MetricStrategy):
         # 更新时间
         self.tic_train = time.time()
 
-    def compute_dev_metric(self, logits, labels, lens):
+    def compute_dev_metric(self, logits, batch):
         """计算验证评价指标"""
+        _, _, lens, labels = batch
 
-        precision, recall, f1_score = self._compute(logits, labels, lens)
+        preds = paddle.argmax(logits, axis=-1)
+        precision, recall, f1_score = self._compute(preds, labels, lens)
         print("dev precision: %f - recall: %f - f1: %f" % (precision, recall, f1_score))
 
 
@@ -81,10 +86,14 @@ class AccuracyMetricStrategy(MetricStrategy):
         self.metric.update(correct)
         return self.metric.accumulate()
 
-    def compute_train_metric(self, logits, labels, epoch, global_step, step, loss):
+    def compute_train_metric(self, loss, logits, epoch, global_step, step, batch):
         """计算训练评价指标"""
 
-        acc = self._compute(logits, labels)
+        # 一般来说， 元组的最后一个元素都是 label
+        labels = batch[-1]
+
+        preds = paddle.argmax(logits, axis=-1)
+        acc = self._compute(preds, labels)
 
         # 每间隔 10 step 输出训练指标
         # if global_step % 2 != 0:
@@ -98,8 +107,11 @@ class AccuracyMetricStrategy(MetricStrategy):
         # 更新时间
         self.tic_train = time.time()
 
-    def compute_dev_metric(self, logits, labels, lens):
+    def compute_dev_metric(self, logits, batch):
         """计算验证评价指标"""
 
-        acc = self._compute(logits, labels)
-        print("dev acc: %.5f" % acc)
+        # 一般来说， 元组的最后一个元素都是 label
+        labels = batch[-1]
+
+        preds = paddle.argmax(logits, axis=-1)
+        return self._compute(preds, labels)

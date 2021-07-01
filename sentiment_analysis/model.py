@@ -21,11 +21,9 @@ class SentimentAnalysisModel(nn.Layer):
         logits = self(input_ids=input_ids, token_type_ids=token_type_ids)
 
         loss = paddle.mean(self.criterion(logits, labels))
-        preds = paddle.argmax(logits, axis=-1)
-        return loss, preds
+        return loss, logits
 
     def validation_step(self, batch):
         input_ids, token_type_ids, labels = batch
         logits = self(input_ids, token_type_ids)
-        preds = paddle.argmax(logits, axis=-1)
-        return preds
+        return logits
