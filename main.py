@@ -1,4 +1,4 @@
-from pointwise_matching.data_module import DataModule
+from pointwise_matching.data_module import PointwiseMatchingDataModule
 from pointwise_matching.model import PointwiseMatchingModel
 from lib.trainer import Trainer
 from lib.metric_stategy import AccuracyMetricStrategy, MetricStrategy
@@ -7,7 +7,7 @@ from lib.optimizer_stategy import BaseOptimizerStrategy
 epochs = 10
 
 # 数据
-data_module = DataModule()
+data_module = PointwiseMatchingDataModule()
 # 模型
 model = PointwiseMatchingModel()
 # 优化器策略

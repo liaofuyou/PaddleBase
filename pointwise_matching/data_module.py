@@ -5,7 +5,7 @@ from paddlenlp.transformers import ErnieGramTokenizer
 from lib.base_data_module import BaseDataModule
 
 
-class DataModule(BaseDataModule):
+class PointwiseMatchingDataModule(BaseDataModule):
 
     def __init__(self, batch_size=32, max_seq_length=128):
 
