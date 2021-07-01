@@ -4,9 +4,9 @@ import numpy as np
 import paddle
 
 from ner.data_module import DataModule
-from strategy.metric_stategy import MetricStrategy, ChunkMetricStrategy
+from lib.metric_stategy import MetricStrategy, ChunkMetricStrategy
 from ner.model import NERInformationExtraction
-from strategy.optimizer_stategy import OptimizerStrategy, BaseOptimizerStrategy
+from lib.optimizer_stategy import OptimizerStrategy, BaseOptimizerStrategy
 
 
 class NerController:

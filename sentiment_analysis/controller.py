@@ -5,8 +5,8 @@ import paddle.nn.functional as F
 
 from sentiment_analysis.data_module import DataModule
 from sentiment_analysis.model import SentimentAnalysisModel
-from strategy.metric_stategy import MetricStrategy, AccuracyMetricStrategy
-from strategy.optimizer_stategy import OptimizerStrategy, BaseOptimizerStrategy
+from lib.metric_stategy import MetricStrategy, AccuracyMetricStrategy
+from lib.optimizer_stategy import OptimizerStrategy, BaseOptimizerStrategy
 
 
 class SentimentAnalysisController:

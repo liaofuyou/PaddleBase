@@ -3,31 +3,29 @@ import os
 import numpy as np
 import paddle
 
-from pointwise_matching.data_module import DataModule
-from pointwise_matching.model import PointwiseMatchingModel
-from lib.metric_stategy import MetricStrategy, AccuracyMetricStrategy
-from lib.optimizer_stategy import OptimizerStrategy, BaseOptimizerStrategy
+from lib.metric_stategy import MetricStrategy
+from lib.optimizer_stategy import OptimizerStrategy
 
 
-class PointwiseMatchingController:
+class Trainer:
 
-    def __init__(self):
+    def __init__(self,
+                 data_module,
+                 model,
+                 optimizer_strategy: OptimizerStrategy,
+                 metric_strategy: MetricStrategy,
+                 epochs=10):
 
-        self.epochs = 10
+        self.epochs = epochs
         self.global_step = 0
 
-        # 数据
-        self.data_module = DataModule()
-
         # 模型
-        self.model = PointwiseMatchingModel()
+        self.data_module = data_module
+        self.model = model
+        self.metric_strategy = metric_strategy
 
         # 优化器策略
-        optimizer_strategy: OptimizerStrategy = BaseOptimizerStrategy(self.model, self.data_module, self.epochs)
         self.lr_scheduler, self.optimizer = optimizer_strategy.get_scheduler_and_optimizer()
-
-        # 评价指标
-        self.metric_strategy: MetricStrategy = AccuracyMetricStrategy()
 
     def train(self):
         """训练"""
