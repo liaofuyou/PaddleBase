@@ -38,7 +38,7 @@ class Trainer:
                 # 训练
                 loss, logits = self.model.training_step(batch)
 
-                # 评价指标
+                # 评估指标
                 self.metric_strategy.compute_train_metric(
                     loss, logits, epoch, self.global_step, step, batch)
 
@@ -72,7 +72,7 @@ class Trainer:
         for batch in dataloader:
             loss, logits = self.model.validation_step(batch)
 
-            # 评价指标
+            # 评估指标
             acc = self.metric_strategy.compute_dev_metric(logits, batch)
             losses.append(loss.numpy())
 

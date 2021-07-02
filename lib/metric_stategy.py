@@ -35,14 +35,14 @@ class ChunkMetricStrategy(MetricStrategy):
 
     def _compute(self, preds, labels, lens):
         # print(preds, labels, lens)
-        """计算评价指标，并返回对应的值"""
+        """计算评估指标，并返回对应的值"""
         n_infer, n_label, n_correct = self.metric.compute(None, lens, preds, labels)
         self.metric.update(n_infer.numpy(), n_label.numpy(), n_correct.numpy())
         precision, recall, f1_score = self.metric.accumulate()
         return precision, recall, f1_score
 
     def compute_train_metric(self, loss, logits, epoch, global_step, step, batch):
-        """计算训练评价指标"""
+        """计算训练评估指标"""
         input_ids, token_type_ids, lens, labels = batch
 
         preds = paddle.argmax(logits, axis=-1)
@@ -61,7 +61,7 @@ class ChunkMetricStrategy(MetricStrategy):
         self.tic_train = time.time()
 
     def compute_dev_metric(self, logits, batch):
-        """计算验证评价指标"""
+        """计算验证评估指标"""
         _, _, lens, labels = batch
 
         preds = paddle.argmax(logits, axis=-1)
@@ -81,14 +81,14 @@ class AccuracyMetricStrategy(MetricStrategy):
         return self.metric
 
     def _compute(self, preds, labels):
-        """计算评价指标，并返回对应的值"""
+        """计算评估指标，并返回对应的值"""
 
         correct = self.metric.compute(preds, labels)
         self.metric.update(correct)
         return self.metric.accumulate()
 
     def compute_train_metric(self, loss, logits, epoch, global_step, step, batch):
-        """计算训练评价指标"""
+        """计算训练评估指标"""
 
         # 一般来说， 元组的最后一个元素都是 label
         labels = batch[-1]
@@ -109,7 +109,7 @@ class AccuracyMetricStrategy(MetricStrategy):
         self.tic_train = time.time()
 
     def compute_dev_metric(self, logits, batch):
-        """计算验证评价指标"""
+        """计算验证评估指标"""
 
         # 一般来说， 元组的最后一个元素都是 label
         labels = batch[-1]
