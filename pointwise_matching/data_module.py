@@ -22,9 +22,7 @@ class PointwiseMatchingDataModule(BaseDataModule):
         encoded_inputs = self.tokenizer(
             text=query, text_pair=title, max_seq_len=max_seq_length)
 
-        # token id
         input_ids = encoded_inputs["input_ids"]
-        # segment ids
         token_type_ids = encoded_inputs["token_type_ids"]
 
         if is_predict:

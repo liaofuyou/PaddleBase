@@ -5,10 +5,10 @@ from paddlenlp.transformers import ErnieForTokenClassification
 
 class NERInformationExtraction(nn.Layer):
 
-    def __init__(self, pretrained_model, num_classes):
+    def __init__(self, num_classes):
         super().__init__()
         # Define the model network and its loss
-        self.ptm = ErnieForTokenClassification.from_pretrained(pretrained_model, num_classes=num_classes)
+        self.ptm = ErnieForTokenClassification.from_pretrained('ernie-1.0', num_classes=num_classes)
 
         # 采用交叉熵 损失函数
         self.criterion = nn.loss.CrossEntropyLoss(ignore_index=-1)
@@ -21,11 +21,7 @@ class NERInformationExtraction(nn.Layer):
         logits = self(input_ids=input_ids, token_type_ids=token_type_ids)
 
         loss = paddle.mean(self.criterion(logits, labels))
-        preds = paddle.argmax(logits, axis=-1)
-        return loss, preds
+        return loss, logits
 
     def validation_step(self, batch):
-        input_ids, token_type_ids, length, labels = batch
-        logits = self(input_ids, token_type_ids)
-        preds = paddle.argmax(logits, axis=-1)
-        return preds
+        return self.training_step(batch)

@@ -32,7 +32,7 @@ class BaseDataModule:
     # 第二步： tokenize
     def _tokenize(self):
         # 转换函数（ 文本->Token 编号 ）
-        trans_fn = partial(self.convert_example, max_seq_length=self.max_seq_length)
+        trans_fn = partial(self.convert_example)
 
         # 转换
         self.train_ds.map(trans_fn)
@@ -70,7 +70,6 @@ class BaseDataModule:
 
         # 转换函数（ 文本->Token 编号 ）
         trans_fn = partial(self.convert_example,
-                           max_seq_length=self.max_seq_length,
                            is_predict=True)
 
         dataset.map(trans_fn)
@@ -87,7 +86,7 @@ class BaseDataModule:
         return len(self.train_ds.label_list)
 
     @abc.abstractmethod
-    def convert_example(self, example, max_seq_length, is_predict=False):
+    def convert_example(self, example, is_predict=False):
         """文本 -> Token Id"""
         pass
 

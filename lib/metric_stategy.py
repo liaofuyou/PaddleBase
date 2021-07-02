@@ -34,6 +34,7 @@ class ChunkMetricStrategy(MetricStrategy):
         return self.metric
 
     def _compute(self, preds, labels, lens):
+        # print(preds, labels, lens)
         """计算评价指标，并返回对应的值"""
         n_infer, n_label, n_correct = self.metric.compute(None, lens, preds, labels)
         self.metric.update(n_infer.numpy(), n_label.numpy(), n_correct.numpy())
@@ -42,7 +43,7 @@ class ChunkMetricStrategy(MetricStrategy):
 
     def compute_train_metric(self, loss, logits, epoch, global_step, step, batch):
         """计算训练评价指标"""
-        _, _, lens, labels = batch
+        input_ids, token_type_ids, lens, labels = batch
 
         preds = paddle.argmax(logits, axis=-1)
         precision, recall, f1_score = self._compute(preds, labels, lens)

@@ -3,7 +3,7 @@ import os
 import numpy as np
 import paddle
 
-from ner.data_module import DataModule
+from ner.data_module import NerDataModule
 from lib.metric_stategy import MetricStrategy, ChunkMetricStrategy
 from ner.model import NERInformationExtraction
 from lib.optimizer_stategy import OptimizerStrategy, BaseOptimizerStrategy
@@ -18,10 +18,10 @@ class NerController:
         ptm_name = 'ernie-1.0'
 
         # 数据
-        self.data_module = DataModule(pretrained_model=ptm_name)
+        self.data_module = NerDataModule()
 
         # 模型
-        self.model = NERInformationExtraction(pretrained_model=ptm_name,
+        self.model = NERInformationExtraction(
                                               num_classes=self.data_module.num_classes())
 
         # 优化器策略
@@ -45,7 +45,7 @@ class NerController:
 
                 # 评价指标
                 self.metric_strategy.compute_train_metric(
-                    logits, labels, lens, epoch, self.global_step, step, loss)
+                   loss, logits, epoch, self.global_step, step, batch)
 
                 # 反向传播
                 self.backward(loss)
