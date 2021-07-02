@@ -10,10 +10,10 @@ from sentiment_analysis.data_module import SentimentAnalysisDataModule
 
 class SentimentAnalysisModel(nn.Layer):
 
-    def __init__(self, num_classes):
+    def __init__(self):
         super().__init__()
         # Define the model network and its loss
-        self.ptm = SkepForSequenceClassification.from_pretrained("skep_ernie_1.0_large_ch", num_classes=num_classes)
+        self.ptm = SkepForSequenceClassification.from_pretrained("skep_ernie_1.0_large_ch")
 
         # 采用交叉熵 损失函数
         self.criterion = nn.loss.CrossEntropyLoss()
@@ -42,7 +42,7 @@ class SentimentAnalysisModel(nn.Layer):
         # 数据
         data_module = SentimentAnalysisDataModule()
         # 模型
-        model = SentimentAnalysisModel(num_classes=data_module.num_classes())
+        model = SentimentAnalysisModel()
         # 优化器策略
         optimizer_strategy = BaseOptimizerStrategy(model, data_module, epochs)
         # 评价指标

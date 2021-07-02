@@ -4,19 +4,17 @@ Paddle 实例项目
 
 ### 项目结构 
 
-采用MDC设计模式（类似mvc模式）
-
-**M = Model**：模型模块， 包括
+**Model**：模型模块， 模型算法具体的实现
 
 ```
 class SentimentAnalysisModel(nn.Layer):
+    def __init__(self):
     def forward(self, batch):
     def training_step(self, batch):
     def validation_step(self, batch):
 ```
 
-**D = Data Module**: 数据处理模块
-
+**Data Module**: 数据处理模块
 
 ```
 class DataModule:
@@ -29,10 +27,10 @@ class DataModule:
 ```
 
 
-**C = Controller**: 控制器, 处理与客户端的交互
+**Trainer**: 总控制类，封装训练、验证、测试的操作。
 
 ```
-class SentimentAnalysisController:
+class Trainer:
     def train(self):
     def evaluate(self):
     def test(self):
