@@ -14,11 +14,11 @@ class MetricStrategy:
         pass
 
     @abc.abstractmethod
-    def compute_train_metric(self, loss, logits, epoch, global_step, step, batch):
+    def compute_train_metric(self, batch_data, model_ret, progress):
         pass
 
     @abc.abstractmethod
-    def compute_dev_metric(self, logits, batch):
+    def compute_dev_metric(self, batch_data, model_ret):
         pass
 
 
@@ -40,9 +40,13 @@ class ChunkMetricStrategy(MetricStrategy):
         precision, recall, f1_score = self.metric.accumulate()
         return precision, recall, f1_score
 
-    def compute_train_metric(self, loss, logits, epoch, global_step, step, batch):
+    def compute_train_metric(self, batch_data, model_ret, progress):
         """计算训练评估指标"""
-        input_ids, token_type_ids, lens, labels = batch
+        _, _, lens, labels = batch_data
+
+        epoch, global_step, step = progress
+        loss = model_ret["loss"]
+        logits = model_ret["logits"]
 
         preds = paddle.argmax(logits, axis=-1)
         precision, recall, f1_score = self._compute(preds, labels, lens)
@@ -59,9 +63,10 @@ class ChunkMetricStrategy(MetricStrategy):
         # 更新时间
         self.tic_train = time.time()
 
-    def compute_dev_metric(self, logits, batch):
+    def compute_dev_metric(self, batch_data, model_ret):
         """计算验证评估指标"""
-        _, _, lens, labels = batch
+        _, _, lens, labels = batch_data
+        logits = model_ret["logits"]
 
         preds = paddle.argmax(logits, axis=-1)
         precision, recall, f1_score = self._compute(preds, labels, lens)
@@ -86,11 +91,14 @@ class AccuracyMetricStrategy(MetricStrategy):
         self.metric.update(correct)
         return self.metric.accumulate()
 
-    def compute_train_metric(self, loss, logits, epoch, global_step, step, batch):
+    def compute_train_metric(self, batch_data, model_ret, progress):
         """计算训练评估指标"""
 
         # 一般来说， 元组的最后一个元素都是 label
-        labels = batch[-1]
+        labels = batch_data[-1]
+        epoch, global_step, step = progress
+        loss = model_ret["loss"]
+        logits = model_ret["logits"]
 
         preds = paddle.argmax(logits, axis=-1)
         acc = self._compute(preds, labels)
@@ -107,11 +115,12 @@ class AccuracyMetricStrategy(MetricStrategy):
         # 更新时间
         self.tic_train = time.time()
 
-    def compute_dev_metric(self, logits, batch):
+    def compute_dev_metric(self, batch_data, model_ret):
         """计算验证评估指标"""
 
         # 一般来说， 元组的最后一个元素都是 label
-        labels = batch[-1]
+        labels = batch_data[-1]
+        logits = model_ret["logits"]
 
         preds = paddle.argmax(logits, axis=-1)
         return self._compute(preds, labels)

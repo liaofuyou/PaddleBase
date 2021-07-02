@@ -44,7 +44,7 @@ class PointwiseMatchingModel(nn.Layer):
         # 算loss
         loss = self.criterion(logits, labels)
         # 返回
-        return loss, logits
+        return {"loss": loss, "logits": logits}
 
     def validation_step(self, batch):
         return self.training_step(batch)

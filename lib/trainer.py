@@ -31,19 +31,19 @@ class Trainer:
         """训练"""
 
         for epoch in range(1, self.epochs + 1):
-            for step, batch in enumerate(self.data_module.train_dataloader, start=1):
+            for step, batch_data in enumerate(self.data_module.train_dataloader, start=1):
 
                 self.global_step += 1
+                progress = (epoch, self.global_step, step)
 
                 # 训练
-                loss, logits = self.model.training_step(batch)
+                model_ret = self.model.training_step(batch_data)
 
                 # 评估指标
-                self.metric_strategy.compute_train_metric(
-                    loss, logits, epoch, self.global_step, step, batch)
+                self.metric_strategy.compute_train_metric(batch_data, model_ret, progress)
 
                 # 反向传播
-                self.backward(loss)
+                self.backward(model_ret["loss"])
 
                 # 验证集上进行评估
                 if self.global_step % 100 == 0:
@@ -69,12 +69,12 @@ class Trainer:
         # 在验证集/测试上跑一遍
         acc = 0
         losses = []
-        for batch in dataloader:
-            loss, logits = self.model.validation_step(batch)
+        for batch_data in dataloader:
+            model_ret = self.model.validation_step(batch_data)
 
             # 评估指标
-            acc = self.metric_strategy.compute_dev_metric(logits, batch)
-            losses.append(loss.numpy())
+            acc = self.metric_strategy.compute_dev_metric(batch_data, model_ret)
+            losses.append(model_ret["loss"].numpy())
 
         print(tag + " evaluate loss: %.5f, accu: %.5f" % (np.mean(losses), acc))
 
