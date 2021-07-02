@@ -8,7 +8,6 @@ from utils.utils import load_local_dataset, load_dict
 class NerDataModule(BaseDataModule):
 
     def __init__(self, batch_size=32, max_seq_length=512):
-
         super().__init__(ErnieTokenizer.from_pretrained('ernie-1.0'), batch_size, max_seq_length)
 
     def load_dataset(self):
@@ -36,23 +35,17 @@ class NerDataModule(BaseDataModule):
         return input_ids, token_type_ids, seq_len, labels
 
     def batchify_fn(self, is_predict=False):
-        ignore_label = -1
-        if is_predict:
-            # predict 数据只返回 input_ids 和 token_type_ids，因此只需要 2 个 Pad 对象作为 batchify_fn
-            batchify_fn = lambda samples, fn=Tuple(
-                Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids
-                Pad(axis=0, pad_val=self.tokenizer.pad_token_type_id),  # token_type_ids
-                Stack(dtype="int64"),  # seq_len
-                Pad(axis=0, pad_val=-1)  # labels
-            ): fn(samples)
-        else:
-            # 训练数据会返回 input_ids, token_type_ids, labels 3 个字段
-            batchify_fn = lambda samples, fn=Tuple(
-                Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids
-                Pad(axis=0, pad_val=self.tokenizer.pad_token_type_id),  # token_type_ids
-                Stack(dtype="int64"),  # seq_len
-                Pad(axis=0)  # labels
-            ): [data for data in fn(samples)]
+
+        fn_list = [
+            Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids
+            Pad(axis=0, pad_val=self.tokenizer.pad_token_type_id),  # token_type_ids
+            Stack(dtype="int64"),  # seq_len
+        ]
+
+        if not is_predict:
+            fn_list.append(Pad(axis=0, pad_val=-1))  # labels
+
+        batchify_fn = lambda samples, fn=Tuple(fn_list): [data for data in fn(samples)]
 
         return batchify_fn
 

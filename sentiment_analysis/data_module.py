@@ -20,10 +20,8 @@ class SentimentAnalysisDataModule(BaseDataModule):
 
         encoded_inputs = self.tokenizer(text=example["text"], max_seq_len=self.max_seq_length)
 
-        # token id
-        input_ids = encoded_inputs["input_ids"]
-        # segment ids
-        token_type_ids = encoded_inputs["token_type_ids"]
+        input_ids = encoded_inputs["input_ids"]  # token id
+        token_type_ids = encoded_inputs["token_type_ids"]  # segment ids
 
         if not is_predict:
             # label：情感极性类别
@@ -35,18 +33,11 @@ class SentimentAnalysisDataModule(BaseDataModule):
             return input_ids, token_type_ids, qid
 
     def batchify_fn(self, is_predict=False):
-        if is_predict:
-            batchify_fn = lambda samples, fn=Tuple(
-                Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids
-                Pad(axis=0, pad_val=self.tokenizer.pad_token_type_id),  # token_type_ids
-                Stack(dtype="int64"),  # qid
-            ): [data for data in fn(samples)]
-        else:
-            # 训练数据会返回 input_ids, token_type_ids, labels 3 个字段
-            batchify_fn = lambda samples, fn=Tuple(
-                Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids
-                Pad(axis=0, pad_val=self.tokenizer.pad_token_type_id),  # token_type_ids
-                Stack(dtype="int64"),  # labels
-            ): [data for data in fn(samples)]
+
+        batchify_fn = lambda samples, fn=Tuple([
+            Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids
+            Pad(axis=0, pad_val=self.tokenizer.pad_token_type_id),  # token_type_ids
+            Stack(dtype="int64")]  # [labels] when train/dev/test OR [qid] when predict
+        ): [data for data in fn(samples)]
 
         return batchify_fn

@@ -22,14 +22,13 @@ class SentimentAnalysisModel(nn.Layer):
         return self.ptm(input_ids, token_type_ids)
 
     def training_step(self, batch):
+        # 参数们
         input_ids, token_type_ids, labels = batch
-
-        logits = self(input_ids=input_ids, token_type_ids=token_type_ids)
-        print("---------------2=", logits)
-        print("---------------2-", labels)
-
+        # 过模型
+        logits = self.forward(input_ids=input_ids, token_type_ids=token_type_ids)
+        # 算loss
         loss = self.criterion(logits, labels)
-
+        # 返回
         return loss, logits
 
     def validation_step(self, batch):

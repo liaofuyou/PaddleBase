@@ -39,15 +39,10 @@ class PointwiseMatchingModel(nn.Layer):
     def training_step(self, batch):
         # 参数们
         input_ids, token_type_ids, labels = batch
-
         # 过模型
         logits = self.forward(input_ids=input_ids, token_type_ids=token_type_ids)
-        print("---------------3", logits)
-        print("---------------3", labels)
-
         # 算loss
         loss = self.criterion(logits, labels)
-
         # 返回
         return loss, logits
 

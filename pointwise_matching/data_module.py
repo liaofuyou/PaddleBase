@@ -32,17 +32,13 @@ class PointwiseMatchingDataModule(BaseDataModule):
             return input_ids, token_type_ids, label
 
     def batchify_fn(self, is_predict=False):
-        if is_predict:
-            batchify_fn = lambda samples, fn=Tuple(
-                Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids
-                Pad(axis=0, pad_val=self.tokenizer.pad_token_type_id),  # token_type_ids
-            ): [data for data in fn(samples)]
-        else:
-            batchify_fn = lambda samples, fn=Tuple(
-                Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids
-                Pad(axis=0, pad_val=self.tokenizer.pad_token_type_id),  # token_type_ids
-                Stack(dtype="int64"),  # labels
-            ): [data for data in fn(samples)]
+        fn_list = [
+            Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids
+            Pad(axis=0, pad_val=self.tokenizer.pad_token_type_id)  # token_type_ids
+        ]
+        if not is_predict:
+            fn_list.append(Stack(dtype="int64"))  # labels
+
+        batchify_fn = lambda samples, fn=Tuple(fn_list): [data for data in fn(samples)]
 
         return batchify_fn
-
