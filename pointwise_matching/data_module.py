@@ -15,7 +15,7 @@ class PointwiseMatchingDataModule(BaseDataModule):
         return load_dataset("lcqmc", splits=["train", "dev", "test"])
 
     def convert_example(self, example, is_predict=False):
-        """文本 -> Token Id"""
+        """转换：文本 -> Token Id"""
 
         query, title = example["query"], example["title"]
 
@@ -32,6 +32,8 @@ class PointwiseMatchingDataModule(BaseDataModule):
             return input_ids, token_type_ids, label
 
     def batchify_fn(self, is_predict=False):
+        """对齐"""
+
         fn_list = [
             Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids
             Pad(axis=0, pad_val=self.tokenizer.pad_token_type_id)  # token_type_ids

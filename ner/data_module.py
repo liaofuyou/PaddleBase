@@ -16,7 +16,7 @@ class NerDataModule(BaseDataModule):
             datafiles=('./data/waybill/train.txt', './data/waybill/dev.txt', './data/waybill/test.txt'))
 
     def convert_example(self, example, is_predict=False):
-        """文本 -> Token Id"""
+        """转换：文本 -> Token Id"""
         tokens, labels = example
         tokenized_input = self.tokenizer(tokens,
                                          return_length=True,
@@ -35,6 +35,7 @@ class NerDataModule(BaseDataModule):
         return input_ids, token_type_ids, seq_len, labels
 
     def batchify_fn(self, is_predict=False):
+        """对齐"""
 
         fn_list = [
             Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids

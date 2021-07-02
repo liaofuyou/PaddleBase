@@ -16,7 +16,7 @@ class SentimentAnalysisDataModule(BaseDataModule):
         return load_dataset("chnsenticorp", splits=["train", "dev", "test"])
 
     def convert_example(self, example, is_predict=False):
-        """文本 -> Token Id"""
+        """转换：文本 -> Token Id"""
 
         encoded_inputs = self.tokenizer(text=example["text"], max_seq_len=self.max_seq_length)
 
@@ -33,6 +33,7 @@ class SentimentAnalysisDataModule(BaseDataModule):
             return input_ids, token_type_ids, qid
 
     def batchify_fn(self, is_predict=False):
+        """对齐"""
 
         batchify_fn = lambda samples, fn=Tuple([
             Pad(axis=0, pad_val=self.tokenizer.pad_token_id),  # input_ids

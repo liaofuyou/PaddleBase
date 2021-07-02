@@ -20,7 +20,7 @@ class NERInformationExtraction(nn.Layer):
 
     def training_step(self, batch):
         # 参数们
-        input_ids, token_type_ids, labels = batch
+        input_ids, token_type_ids, sent_len, labels = batch
         # 过模型
         logits = self.forward(input_ids=input_ids, token_type_ids=token_type_ids)
         # 算loss
