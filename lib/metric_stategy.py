@@ -34,7 +34,6 @@ class ChunkMetricStrategy(MetricStrategy):
         return self.metric
 
     def _compute(self, preds, labels, lens):
-        # print(preds, labels, lens)
         """计算评估指标，并返回对应的值"""
         n_infer, n_label, n_correct = self.metric.compute(None, lens, preds, labels)
         self.metric.update(n_infer.numpy(), n_label.numpy(), n_correct.numpy())

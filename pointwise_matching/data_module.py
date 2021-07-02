@@ -14,13 +14,13 @@ class PointwiseMatchingDataModule(BaseDataModule):
     def load_dataset(self):
         return load_dataset("lcqmc", splits=["train", "dev", "test"])
 
-    def convert_example(self, example, max_seq_length, is_predict=False):
+    def convert_example(self, example, is_predict=False):
         """文本 -> Token Id"""
 
         query, title = example["query"], example["title"]
 
         encoded_inputs = self.tokenizer(
-            text=query, text_pair=title, max_seq_len=max_seq_length)
+            text=query, text_pair=title, max_seq_len=self.max_seq_length)
 
         input_ids = encoded_inputs["input_ids"]
         token_type_ids = encoded_inputs["token_type_ids"]

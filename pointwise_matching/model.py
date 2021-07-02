@@ -2,6 +2,11 @@ import paddle.nn as nn
 import paddle.nn.functional as F
 from paddlenlp.transformers import ErnieGramModel
 
+from lib.metric_stategy import AccuracyMetricStrategy
+from lib.optimizer_stategy import BaseOptimizerStrategy
+from lib.trainer import Trainer
+from pointwise_matching.data_module import PointwiseMatchingDataModule
+
 
 class PointwiseMatchingModel(nn.Layer):
 
@@ -22,7 +27,6 @@ class PointwiseMatchingModel(nn.Layer):
                 token_type_ids=None,
                 position_ids=None,
                 attention_mask=None):
-
         # ernie
         _, cls_embedding = self.ptm(input_ids, token_type_ids, position_ids, attention_mask)
         # dropout
@@ -38,6 +42,8 @@ class PointwiseMatchingModel(nn.Layer):
 
         # 过模型
         logits = self.forward(input_ids=input_ids, token_type_ids=token_type_ids)
+        print("---------------3", logits)
+        print("---------------3", labels)
 
         # 算loss
         loss = self.criterion(logits, labels)
@@ -47,3 +53,29 @@ class PointwiseMatchingModel(nn.Layer):
 
     def validation_step(self, batch):
         return self.training_step(batch)
+
+    @staticmethod
+    def run():
+        epochs = 10
+
+        # 数据
+        data_module = PointwiseMatchingDataModule()
+        # 模型
+        model = PointwiseMatchingModel()
+        # 优化器策略
+        optimizer_strategy = BaseOptimizerStrategy(model, data_module, epochs)
+        # 评价指标
+        metric_strategy = AccuracyMetricStrategy()
+
+        trainer = Trainer(data_module,
+                          model,
+                          optimizer_strategy,
+                          metric_strategy,
+                          epochs)
+
+        trainer.train()
+
+        # data = {'query': '喜欢打篮球的男生喜欢什么样的女生', 'title': '爱打篮球的男生喜欢什么样的女生'}
+        # data2 = {'query': '喜欢打篮球的男生喜欢什么样的女生', 'title': '爱打篮球的男生喜欢什么样的女生'}
+        #
+        # controller.predict([data, data2])

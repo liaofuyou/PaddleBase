@@ -1,8 +1,3 @@
-from functools import partial
-
-from paddle.io import BatchSampler
-from paddle.io import DataLoader
-from paddle.io import DistributedBatchSampler
 from paddlenlp.data import Stack, Pad, Tuple, np
 from paddlenlp.datasets import load_dataset
 from paddlenlp.transformers import SkepTokenizer
@@ -20,10 +15,10 @@ class SentimentAnalysisDataModule(BaseDataModule):
     def load_dataset(self):
         return load_dataset("chnsenticorp", splits=["train", "dev", "test"])
 
-    def convert_example(self, example, max_seq_length, is_predict=False):
+    def convert_example(self, example, is_predict=False):
         """文本 -> Token Id"""
 
-        encoded_inputs = self.tokenizer(text=example["text"], max_seq_len=max_seq_length)
+        encoded_inputs = self.tokenizer(text=example["text"], max_seq_len=self.max_seq_length)
 
         # token id
         input_ids = encoded_inputs["input_ids"]
