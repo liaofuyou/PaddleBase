@@ -21,7 +21,7 @@ class BaseOptimizerStrategy(OptimizerStrategy):
         self.num_training_steps = len(data_module.train_dataloader) * epochs
 
     def get_scheduler_and_optimizer(self) -> (Optimizer, LRScheduler):
-        lr_scheduler = LinearDecayWithWarmup(5E-5, self.num_training_steps, 0.0)
+        lr_scheduler = LinearDecayWithWarmup(5E-5, self.num_training_steps, 0.1)
 
         decay_params = [
             p.name for n, p in self.model.named_parameters()
