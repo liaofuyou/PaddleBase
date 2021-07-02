@@ -2,7 +2,31 @@
 
 Paddle 实例项目
 
-### 项目结构 
+### 一个栗子
+
+```
+epochs = 10
+
+# 数据
+data_module = PointwiseMatchingDataModule()
+# 模型
+model = PointwiseMatchingModel()
+# 优化器策略
+optimizer_strategy = BaseOptimizerStrategy(model, data_module, epochs)
+# 评估指标
+metric_strategy = AccuracyMetricStrategy()
+
+trainer = Trainer(data_module,
+                  model,
+                  optimizer_strategy,
+                  metric_strategy,
+                  epochs)
+
+trainer.train()
+
+```
+
+### 模块们
 
 **Model**：模型模块， 模型算法具体的实现
 

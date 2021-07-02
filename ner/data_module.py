@@ -22,14 +22,18 @@ class NerDataModule(BaseDataModule):
         tokenized_input = self.tokenizer(tokens,
                                          return_length=True,
                                          is_split_into_words=True)
+
+        input_ids = tokenized_input['input_ids']
+        token_type_ids = tokenized_input['token_type_ids']
+        seq_len = tokenized_input['seq_len']
+
         # Token '[CLS]' and '[SEP]' will get label 'O'
         labels = ['O'] + labels + ['O']
-        tokenized_input['labels'] = [self.label_vocab[x] for x in labels]
 
-        return tokenized_input['input_ids'], \
-               tokenized_input['token_type_ids'], \
-               tokenized_input['seq_len'], \
-               tokenized_input['labels']
+        # 讲label名字换为label Id
+        labels = [self.label_vocab[x] for x in labels]
+
+        return input_ids, token_type_ids, seq_len, labels
 
     def batchify_fn(self, is_predict=False):
         ignore_label = -1

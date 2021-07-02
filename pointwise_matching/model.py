@@ -64,7 +64,7 @@ class PointwiseMatchingModel(nn.Layer):
         model = PointwiseMatchingModel()
         # 优化器策略
         optimizer_strategy = BaseOptimizerStrategy(model, data_module, epochs)
-        # 评价指标
+        # 评估指标
         metric_strategy = AccuracyMetricStrategy()
 
         trainer = Trainer(data_module,
