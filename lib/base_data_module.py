@@ -10,10 +10,15 @@ from paddlenlp.transformers import PretrainedTokenizer
 
 class BaseDataModule:
 
-    def __init__(self, tokenizer: PretrainedTokenizer, batch_size, max_seq_length):
+    def __init__(self, tokenizer: PretrainedTokenizer, batch_size, max_seq_length, is_predict=False):
+        self.is_predict = is_predict
         self.batch_size = batch_size
         self.max_seq_length = max_seq_length
         self.tokenizer = tokenizer
+        self.predict_ds = None
+
+        if is_predict:
+            return
 
         # 第一步： 加载数据集（训练集、验证集、测试集）
         self.train_ds, self.dev_ds, self.test_ds = self.load_dataset()
@@ -64,32 +69,29 @@ class BaseDataModule:
 
         return train_dataloader, dev_dataloader, test_dataloader
 
-    # predict dataloader
-    def predict_dataloader(self, lines: list):
-        dataset = MapDataset(lines)
+    def predict_dataloader(self, data_list: list):
+        """predict dataloader"""
+
+        # 数据集
+        self.predict_ds = MapDataset(data_list)
 
         # 转换函数（ 文本->Token 编号 ）
-        trans_fn = partial(self.convert_example,
-                           is_predict=True)
-
-        dataset.map(trans_fn)
+        self.predict_ds.map(self.convert_example)
 
         # Test DataLoader
-        dataloader = DataLoader(dataset=dataset,
-                                batch_sampler=BatchSampler(dataset, shuffle=False),
-                                collate_fn=self.batchify_fn(True),
-                                return_list=True)
-
-        return dataloader
+        return DataLoader(dataset=self.predict_ds,
+                          batch_sampler=BatchSampler(self.predict_ds, shuffle=False),
+                          collate_fn=self.batchify_fn(),
+                          return_list=True)
 
     def num_classes(self):
-        return len(self.train_ds.label_list)
+        return 2
 
     @abc.abstractmethod
-    def convert_example(self, example, is_predict=False):
+    def convert_example(self, example):
         """文本 -> Token Id"""
         pass
 
     @abc.abstractmethod
-    def batchify_fn(self, is_predict=False):
+    def batchify_fn(self):
         pass

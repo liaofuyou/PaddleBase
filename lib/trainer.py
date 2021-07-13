@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 import paddle
 
 from lib.metric_stategy import MetricStrategy
@@ -57,60 +56,31 @@ class Trainer:
 
         # 进入 eval 模式
         self.model.eval()
-        self.metric_strategy.get_metric().reset()
+        self.metric_strategy.reset()
 
         if dev:
-            tag = "dev"
             dataloader = self.data_module.dev_dataloader
         else:
-            tag = "Test"
             dataloader = self.data_module.train_dataloader
 
         # 在验证集/测试上跑一遍
-        acc = 0
-        losses = []
-        for batch_data in dataloader:
+        batch_count = len(dataloader)
+        for step, batch_data in enumerate(dataloader, start=1):
             model_ret = self.model.validation_step(batch_data)
-
             # 评估指标
-            acc = self.metric_strategy.compute_dev_metric(batch_data, model_ret)
-            losses.append(model_ret["loss"].numpy())
-
-        print(tag + " evaluate loss: %.5f, accu: %.5f" % (np.mean(losses), acc))
+            self.metric_strategy.compute_dev_metric(batch_data, model_ret, batch_count == step)
 
         # 进入 train 模式
         if dev:
             self.model.train()
 
         # 重置
-        self.metric_strategy.get_metric().reset()
+        self.metric_strategy.reset()
 
     @paddle.no_grad()
     def test(self):
         """测试"""
         self.evaluate(dev=False)
-
-    @paddle.no_grad()
-    def predict(self, lines: list):
-        """预测"""
-        batch_probs = []
-
-        self.model.eval()
-
-        with paddle.no_grad():
-            for batch_data in self.data_module.predict_dataloader(lines):
-                input_ids, token_type_ids = batch_data
-                input_ids = paddle.to_tensor(input_ids)
-                token_type_ids = paddle.to_tensor(token_type_ids)
-
-                # 获取每个样本的预测概率: [batch_size, 2] 的矩阵
-                batch_prob = self.model(input_ids=input_ids, token_type_ids=token_type_ids).numpy()
-
-                batch_probs.append(batch_prob)
-
-            batch_probs = np.concatenate(batch_probs, axis=0)
-
-            return batch_probs
 
     def save_model(self, dir_name="ckpt"):
 

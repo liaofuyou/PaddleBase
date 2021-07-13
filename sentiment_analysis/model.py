@@ -1,5 +1,5 @@
-import paddle
 import paddle.nn as nn
+import paddle.nn.functional as F
 from paddlenlp.transformers import SkepForSequenceClassification
 
 from lib.metric_stategy import AccuracyMetricStrategy
@@ -19,7 +19,9 @@ class SentimentAnalysisModel(nn.Layer):
         self.criterion = nn.loss.CrossEntropyLoss()
 
     def forward(self, input_ids, token_type_ids=None):
-        return self.ptm(input_ids, token_type_ids)
+        output = self.ptm(input_ids, token_type_ids)
+        logits = F.softmax(output)
+        return logits
 
     def training_step(self, batch):
         # 参数们

@@ -1,7 +1,7 @@
 import abc
 
-from paddle.optimizer import AdamW, Optimizer
-from paddle.optimizer.lr import LRScheduler
+from paddle.optimizer import AdamW, Optimizer, Adam
+from paddle.optimizer.lr import LRScheduler, NoamDecay
 from paddlenlp.transformers import LinearDecayWithWarmup
 
 
@@ -14,7 +14,7 @@ class OptimizerStrategy:
 
 
 class BaseOptimizerStrategy(OptimizerStrategy):
-    """最原始的优化器"""
+    """默认的优化策略"""
 
     def __init__(self, model, data_module, epochs):
         self.model = model
@@ -36,3 +36,26 @@ class BaseOptimizerStrategy(OptimizerStrategy):
             apply_decay_param_fun=lambda x: x in decay_params)
 
         return lr_scheduler, optimizer
+
+
+class TranslateOptimizerStrategy(OptimizerStrategy):
+    """机器翻译优化策略"""
+
+    def __init__(self, model):
+        self.model = model
+
+    def get_scheduler_and_optimizer(self) -> (Optimizer, LRScheduler):
+        args = self.model.args
+        scheduler = NoamDecay(args.d_model,
+                              args.warmup_steps,
+                              args.learning_rate,
+                              last_epoch=0)
+
+        # Define optimizer
+        optimizer = Adam(learning_rate=scheduler,
+                         beta1=args.beta1,
+                         beta2=args.beta2,
+                         epsilon=float(args.eps),
+                         parameters=self.model.parameters())
+
+        return scheduler, optimizer
